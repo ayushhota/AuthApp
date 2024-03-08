@@ -1,16 +1,23 @@
+// contains Authentication, token, json-web-token, bcrypt too !!
+
 import express from "express";
 import path from "path";
 import mongoose from "mongoose";
-import cookieParser from "cookie-parser";
+import cookieParser from "cookie-parser"; //to access the cookie
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 
+const PORT = 5000;
+
+
 mongoose
   .connect("mongodb://127.0.0.1:27017", {
-    dbName: "backend",
+    dbName: "backend-1",
   })
   .then(() => console.log("Database Connected"))
   .catch((e) => console.log(e));
+
+
 
 const userSchema = new mongoose.Schema({
   name: String,
@@ -27,8 +34,12 @@ app.use(express.static(path.join(path.resolve(), "public")));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
+
+
 // Setting up View Engine
 app.set("view engine", "ejs");
+
+
 
 const isAuthenticated = async (req, res, next) => {
   const { token } = req.cookies;
@@ -38,22 +49,35 @@ const isAuthenticated = async (req, res, next) => {
     req.user = await User.findById(decoded._id);
 
     next();
+
   } else {
     res.redirect("/login");
   }
 };
 
+
+
 app.get("/", isAuthenticated, (req, res) => {
   res.render("logout", { name: req.user.name });
 });
+
+
 
 app.get("/login", (req, res) => {
   res.render("login");
 });
 
+
+
 app.get("/register", (req, res) => {
   res.render("register");
 });
+
+app.get("/forget-password", (req, res) => {
+  res.render("forget-password");
+});
+
+
 
 app.post("/login", async (req, res) => {
   const { email, password } = req.body;
@@ -75,6 +99,8 @@ app.post("/login", async (req, res) => {
   });
   res.redirect("/");
 });
+
+
 
 app.post("/register", async (req, res) => {
   const { name, email, password } = req.body;
@@ -100,6 +126,8 @@ app.post("/register", async (req, res) => {
   res.redirect("/");
 });
 
+
+
 app.get("/logout", (req, res) => {
   res.cookie("token", null, {
     httpOnly: true,
@@ -108,6 +136,7 @@ app.get("/logout", (req, res) => {
   res.redirect("/");
 });
 
-app.listen(5000, () => {
+
+app.listen(PORT, () => {
   console.log("Server is working");
 });
